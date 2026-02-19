@@ -11,8 +11,7 @@ import io
 COUNTER_URL = "https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=aobun"
 
 def inject_tracking():
-    # imgタグだとGASがテキストを返した場合にリンク切れになるため、
-    # iframeに変更してあらゆる形式（テキスト、HTML、画像）を表示できるように修正
+    # 画像ではなく、Fetch APIを使ってGASからテキスト（数字）を取得して表示する方式に変更
     st.components.v1.html(
         f"""
         <!-- Google tag (gtag.js) -->
@@ -24,13 +23,27 @@ def inject_tracking():
           gtag('config', 'G-JBBPR56PTY');
         </script>
         
-        <!-- GAS Counter (Iframe) -->
-        <div style="display: flex; justify-content: flex-end; align-items: center; padding-right: 10px;">
+        <!-- GAS Counter (Text Fetch) -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; padding-right: 10px; font-family: sans-serif;">
             <span style="font-size: 12px; color: #666; margin-right: 5px;">Access:</span>
-            <iframe src="{COUNTER_URL}" width="80" height="30" scrolling="no" style="border: none; overflow: hidden; vertical-align: middle;"></iframe>
+            <span id="counter-value" style="font-size: 14px; font-weight: bold; color: #333;">...</span>
         </div>
+
+        <script>
+          fetch("{COUNTER_URL}")
+            .then(response => response.text())
+            .then(data => {{
+              // 取得したデータがHTMLタグを含んでいる場合を考慮し、テキストのみを抽出
+              const cleanData = data.replace(/<[^>]*>?/gm, '').trim();
+              document.getElementById('counter-value').innerText = cleanData;
+            }})
+            .catch(err => {{
+              console.error('Counter Error:', err);
+              document.getElementById('counter-value').innerText = 'Error';
+            }});
+        </script>
         """,
-        height=40, # 表示エリアの高さを確保
+        height=40,
     )
 
 st.set_page_config(page_title="青空文庫 ルビ削除ツール", page_icon="📘")
