@@ -11,7 +11,7 @@ import io
 COUNTER_URL = "https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=aobun"
 
 def inject_tracking():
-    # 画像ではなく、Fetch APIを使ってGASからテキスト（数字）を取得して表示する方式に変更
+    # JSON形式（{"count":14}）から数字のみを取り出して表示するように修正
     st.components.v1.html(
         f"""
         <!-- Google tag (gtag.js) -->
@@ -33,13 +33,24 @@ def inject_tracking():
           fetch("{COUNTER_URL}")
             .then(response => response.text())
             .then(data => {{
-              // 取得したデータがHTMLタグを含んでいる場合を考慮し、テキストのみを抽出
-              const cleanData = data.replace(/<[^>]*>?/gm, '').trim();
-              document.getElementById('counter-value').innerText = cleanData;
+              try {{
+                // JSONとしてパースを試みる
+                const json = JSON.parse(data);
+                if (json && json.count !== undefined) {{
+                  document.getElementById('counter-value').innerText = json.count;
+                }} else {{
+                  // JSONだがcountがない場合はテキストとして表示
+                  document.getElementById('counter-value').innerText = data.replace(/<[^>]*>?/gm, '').trim();
+                }}
+              }} catch (e) {{
+                // JSONでない場合はそのままテキストとして表示
+                const cleanData = data.replace(/<[^>]*>?/gm, '').trim();
+                document.getElementById('counter-value').innerText = cleanData;
+              }}
             }})
             .catch(err => {{
               console.error('Counter Error:', err);
-              document.getElementById('counter-value').innerText = 'Error';
+              document.getElementById('counter-value').innerText = '-';
             }});
         </script>
         """,
