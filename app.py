@@ -11,6 +11,7 @@ import io
 COUNTER_URL = "https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=aobun"
 
 def inject_tracking():
+    # heightを確保し、imgタグの非表示設定を解除して表示するように変更
     st.components.v1.html(
         f"""
         <!-- Google tag (gtag.js) -->
@@ -21,10 +22,14 @@ def inject_tracking():
           gtag('js', new Date());
           gtag('config', 'G-JBBPR56PTY');
         </script>
-        <!-- GAS Counter -->
-        <img src="{COUNTER_URL}" width="1" height="1" style="display:none;">
+        
+        <!-- GAS Counter (Visible) -->
+        <div style="text-align: right; padding-right: 10px;">
+            <span style="font-size: 12px; color: #666; margin-right: 5px;">Access:</span>
+            <img src="{COUNTER_URL}" style="vertical-align: middle; border: none;" alt="counter">
+        </div>
         """,
-        height=0,
+        height=40, # 表示エリアの高さを確保
     )
 
 st.set_page_config(page_title="青空文庫 ルビ削除ツール", page_icon="📘")
